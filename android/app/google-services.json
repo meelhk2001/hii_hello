@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "402403210965",
+    "firebase_url": "https://hii-helloji.firebaseio.com",
+    "project_id": "hii-helloji",
+    "storage_bucket": "hii-helloji.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:402403210965:android:e8acb8ebaeae9aa72a945c",
+        "android_client_info": {
+          "package_name": "com.hii.hii_hello"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "402403210965-f01ikkl315ra0b9tpqg0ja3gl1k0nmh8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hii.hii_hello",
+            "certificate_hash": "b6a39e135ad45cf0eea1a2c665fd69a43dfde5ab"
+          }
+        },
+        {
+          "client_id": "402403210965-icffpssh13tl280crcn4q6skmslm43v7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD06628PnlJ1fuC3F5aajhpcaGpAMeICj0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "402403210965-icffpssh13tl280crcn4q6skmslm43v7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
