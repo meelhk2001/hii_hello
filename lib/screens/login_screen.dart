@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'loading.dart';
+import 'package:flutter/services.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -26,51 +27,47 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final String photoUrl =
       'https://4.bp.blogspot.com/-txKoWDBmvzY/XHAcBmIiZxI/AAAAAAAAC5o/wOkD9xoHn28Dl0EEslKhuI-OzP8_xvTUwCLcBGAs/s1600/2.jpg';
- 
+
   var isLoading = false;
   @override
   void initState() {
     getCurrentUser();
+    // setState(() {
+    //         isLoading = false;
+    //       });
     super.initState();
   }
 
   Future<void> getCurrentUser() async {
-    try{
-      isLoading =true;
+    try {
+      isLoading = true;
       FirebaseUser user = await FirebaseAuth.instance.currentUser();
       print('Yhaaaa  aaaa find kiya user ko');
       if (user != null) {
-      prefs = await SharedPreferences.getInstance();
-      phoneNumber = prefs.getString('phonenumber');
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => Home(user, phoneNumber),
-          ));
-          //print('isLoading =============== ${isLoading.toString()}');
-          setState(() {
-            isLoading = false;
-          });
-         // print('isLoading false =============== ${isLoading.toString()}');
-    } else {
-      
-     // print('isLoading =============== ${isLoading.toString()}');
-      setState(() {
-        isLoading = false;
-      });
-      //print('Else isLoading false =============== ${isLoading.toString()}');
-      return;
-    }
-    }catch(error){
+        prefs = await SharedPreferences.getInstance();
+        phoneNumber = prefs.getString('phonenumber');
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => Home(user, phoneNumber),
+            ));
+        //print('isLoading =============== ${isLoading.toString()}');
+
+        // print('isLoading false =============== ${isLoading.toString()}');
+      } else {
+        // print('isLoading =============== ${isLoading.toString()}');
+        setState(() {
+          isLoading = false;
+        });
+        //print('Else isLoading false =============== ${isLoading.toString()}');
+        return;
+      }
+    } catch (error) {
       setState(() {
         isLoading = false;
       });
       print('Error =====================  $error');
-      
     }
-    
-
-    
   }
 
   Future<void> otpVerify(AuthCredential credential, FirebaseAuth auth) async {
@@ -87,6 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final List<DocumentSnapshot> documents = result.documents;
       if (documents.length == 0) {
         // Update data to server if new user
+        
         await Firestore.instance
             .collection('users')
             .document(firebaseUser.uid)
@@ -107,6 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('id', currentUser.uid);
         await prefs.setString('nickname', currentUser.displayName);
         await prefs.setString('photoUrl', currentUser.photoUrl);
+        await prefs.setString('phoneNumber', phoneNumber);
       } else {
         // Write data to local
         prefs = await SharedPreferences.getInstance();
@@ -114,8 +113,9 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('phonenumber', phoneNumber);
         await prefs.setString('id', documents[0]['id']);
         await prefs.setString('nickname', documents[0]['nickname']);
-        //await prefs.setString('photoUrl', documents[0]['photoUrl']);
+        await prefs.setString('photoUrl', documents[0]['photoUrl']);
         await prefs.setString('aboutMe', documents[0]['aboutMe']);
+        await prefs.setString('phoneNumber', phoneNumber);
       }
       Fluttertoast.showToast(msg: "Sign in success");
       setState(() {
@@ -183,31 +183,58 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return isLoading
-          ? Loading()
-          :Scaffold(
-        body: Center(
-      child:  Container(
-              padding: EdgeInsets.all(10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  TextField(
+        ? Loading()
+        : Scaffold(
+            body: Container(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.25,
+                  width: double.infinity,
+                  color: Colors.teal,
+                  child: Center(
+                    child: Text(
+                      'Hii Hello',
+                      style: TextStyle(fontSize: 40, color: Colors.white),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 90,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: TextField(
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(10),
+                    ],
+                    cursorColor: Colors.teal,
+                    decoration: InputDecoration(
+                        hintText: 'Enter your 10-digit number',
+                        hintStyle: TextStyle(color: Colors.teal)),
+                    style: TextStyle(
+                        fontSize: 20, letterSpacing: 1, color: Colors.teal),
                     keyboardType: TextInputType.number,
                     onChanged: (val) => phoneNumber = val,
                   ),
-                  SizedBox(height: 10),
-                  FlatButton(
-                    child: Text('Request Otp'),
-                    onPressed: () {
-                      String phone = '+91$phoneNumber';
+                ),
+                SizedBox(height: 30),
+                FlatButton(
+                  color: Colors.teal,
+                  child: Text(
+                    'Request OTP',
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
+                  onPressed: () {
+                    String phone = '+91$phoneNumber';
 
-                      print(phone);
-                      sendOtp(phone, context);
-                    },
-                  )
-                ],
-              ),
+                    print(phone);
+                    sendOtp(phone, context);
+                  },
+                )
+              ],
             ),
-    ));
+          ));
   }
 }

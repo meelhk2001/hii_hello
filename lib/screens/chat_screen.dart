@@ -4,18 +4,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:dio/dio.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+
+
 
 class Chat extends StatefulWidget {
   final String docId;
   final String imageUrl;
   final String name;
-  final String phoneNumber;
+  String phoneNumber;
   Chat(this.docId, this.imageUrl, this.name, this.phoneNumber);
   @override
   _ChatState createState() => _ChatState();
 }
 
-class _ChatState extends State<Chat> {
+class _ChatState extends State<Chat> with SingleTickerProviderStateMixin{
   String id;
   String typedMessage;
   var listMessage;
@@ -24,11 +29,64 @@ class _ChatState extends State<Chat> {
   var textEditingController = TextEditingController();
   File imageFile;
   bool isLoading;
+  //notification
+  final Firestore _db = Firestore.instance;
+  final FirebaseMessaging _fcm = FirebaseMessaging();
+
   @override
   void initState() {
     groupChatId = '';
     readLocal();
+    ////notification/////////notification////notification////notification////notification////notification////notification////notification
+    
+
+
+    // _fcm.configure(
+    //   onMessage: (Map<String, dynamic> message) async {
+    //     print("onMessage: $message");
+    //     showDialog(
+    //       context: context,
+    //       builder: (context) => AlertDialog(
+    //         content: ListTile(
+    //           title: Text(message['notification']['title']),
+    //           subtitle: Text(message['notification']['body']),
+    //         ),
+    //         actions: <Widget>[
+    //           FlatButton(
+    //             child: Text('Ok'),
+    //             onPressed: () => Navigator.of(context).pop(),
+    //           ),
+    //         ],
+    //       ),
+    //     );
+    //   },
+    //   onLaunch: (Map<String, dynamic> message) async {
+    //     print("onLaunch: $message");
+    //     // TODO optional
+    //   },
+    //   onResume: (Map<String, dynamic> message) async {
+    //     print("onResume: $message");
+    //     // TODO optional
+    //   },
+    // );
+
+
+
+
+
+
+
+  //StreamSubscription iosSubscription;
+
+
     super.initState();
+  }
+  
+    @override
+  void didChangeDependencies() {
+    groupChatId = '';
+    readLocal();
+    super.didChangeDependencies();
   }
 
   bool isLastMessageRight(int index) {
@@ -121,6 +179,7 @@ class _ChatState extends State<Chat> {
 
   void readLocal() async {
     prefs = await SharedPreferences.getInstance();
+    widget.phoneNumber = prefs.getString('phoneNumber');
     id = prefs.getString('id') ?? '';
     if (id.hashCode <= widget.docId.hashCode) {
       groupChatId = '$id-${widget.docId}';
@@ -171,7 +230,7 @@ class _ChatState extends State<Chat> {
             ),
     );
   }
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -213,7 +272,7 @@ class _ChatState extends State<Chat> {
                 bottom: isLastMessageRight(index) ? 20.0 : 3.0, right: 0.0),
             padding: EdgeInsets.fromLTRB(8.0, 5.0, 8.0, 5.0),
             decoration: BoxDecoration(
-                color: Colors.teal, borderRadius: BorderRadius.circular(8.0)),
+                color: document['read'] ==1 ? Colors.cyan[800] : Colors.teal, borderRadius: BorderRadius.circular(8.0)),
             // ///////////////////////////////////////////////////////////////////////////////;;;;';;
             child: ConstrainedBox(
               constraints: new BoxConstraints(
@@ -243,7 +302,7 @@ class _ChatState extends State<Chat> {
                   ],
                 ),
                 decoration: BoxDecoration(
-                    color: Colors.teal,
+                    color: document['read'] ==1 ? Colors.cyan[800] : Colors.teal,
                     borderRadius: BorderRadius.circular(8.0)),
               ),
             ),
@@ -252,7 +311,13 @@ class _ChatState extends State<Chat> {
         mainAxisAlignment: MainAxisAlignment.end,
       );
     } else {
-      // Left (peer message)
+     Firestore.instance
+          .collection('messages')
+          .document(groupChatId)
+          .collection(groupChatId).document(document.documentID).setData({'read': 0},merge: true);
+
+          
+      // Left (peer message)///////////////////////////////////////////////////////////////////
       return Container(
         child: Column(
           children: <Widget>[
@@ -321,7 +386,7 @@ class _ChatState extends State<Chat> {
           .document(groupChatId)
           .collection(groupChatId)
           .document(DateTime.now().millisecondsSinceEpoch.toString());
-
+/////////////////////////////////////////////////////////////////////////////
       Firestore.instance.runTransaction((transaction) async {
         await transaction.set(
           documentReference,
@@ -330,9 +395,23 @@ class _ChatState extends State<Chat> {
             'idTo': widget.docId,
             'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
             'content': content,
+            'read': 1
           },
         );
-        Firestore.instance
+        try{Firestore.instance
+            .collection('users')
+            .document('${widget.docId}')
+            .collection('contacts')
+            .document(widget.phoneNumber)
+            .updateData({
+          'id': id,
+          'photoUrl': null,
+          'createdAt': null,
+          'chattingWith': null,
+          'contacts': null,
+        },);}
+        catch(error){
+          Firestore.instance
             .collection('users')
             .document('${widget.docId}')
             .collection('contacts')
@@ -345,7 +424,9 @@ class _ChatState extends State<Chat> {
           'chattingWith': null,
           'contacts': null,
         }, merge: true);
+        }
       });
+      
       //listScrollController.animateTo(0.0, duration: Duration(milliseconds: 300), curve: Curves.easeOut);
     } else {
       textEditingController.clear();
@@ -354,4 +435,86 @@ class _ChatState extends State<Chat> {
       //Fluttertoast.showToast(msg: 'Nothing to send');
     }
   }
+
+
+
+///////////////
+///Strating of notification code
+
+// Future<void> sendNotification(receiver,msg)async{
+
+//     var token = await getToken(receiver);
+//     print('token : $token');
+
+//     final data = {
+//       "notification": {"body": "Accept Ride Request", "title": "This is Ride Request"},
+//       "priority": "high",
+//       "data": {
+//         "click_action": "FLUTTER_NOTIFICATION_CLICK",
+//         "id": "1",
+//         "status": "done"
+//       },
+//       "to": "$token"
+//     };
+
+//     final headers = {
+//       'content-type': 'application/json',
+//       'Authorization': 'key=AAAAY2mZqb4:APA91bH38d3b4mgc4YpVJ0eBgDez1jxEzCNTq1Re6sJQNZ2OJvyvlZJYx7ZASIrAj1DnSfVJL-29qsyPX6u8MyakmzlY-MRZeXOodkIdYoWgwvPVhNhJmfrTC6ZC2wG7lcmgXElA6E09'
+//     };
+
+
+//     BaseOptions options = new BaseOptions(
+//       connectTimeout: 5000,
+//       receiveTimeout: 3000,
+//       headers: headers,
+//     );
+
+
+//     try {
+//       final response = await Dio(options).post(postUrl,
+//           data: data);
+
+//       if (response.statusCode == 200) {
+//         Fluttertoast.showToast(msg: 'Request Sent To Driver');
+//       } else {
+//         print('notification sending failed');
+//         // on failure do sth
+//       }
+//     }
+//     catch(e){
+//       print('exception $e');
+//     }
+
+//   }
+
+
+
+  // Future<String> getToken(userId)async{
+
+  //   final Firestore _db = Firestore.instance;
+
+  //   var token;
+  //   //String fcmToken = await _fcm.getToken();
+  //   await _db.collection('users')
+  //       .document(userId)
+  //       .collection('tokens').getDocuments().then((snapshot){
+  //         snapshot.documents.forEach((doc){
+  //           token = doc.documentID;
+  //         });
+  //   });
+
+  //   return token;
+
+
+  // }
+
+//////////////////
+///Ending of Notification code
+
+
+
+
+
+
+
 }

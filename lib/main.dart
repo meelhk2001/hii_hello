@@ -11,7 +11,7 @@ class MyApp extends StatelessWidget {
       title: 'Chat Demo',
       theme: ThemeData(
         primaryColor: Colors.teal,
-        accentColor: Colors.tealAccent[200]
+        accentColor: Colors.teal,
       ),
       home: LoginScreen(),
       debugShowCheckedModeBanner: false,

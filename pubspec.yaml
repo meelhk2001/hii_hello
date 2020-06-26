@@ -38,6 +38,8 @@ dependencies:
   fluttertoast: ^4.0.1
   image_picker: ^0.6.7+2
   firebase_storage: ^3.1.6
+  firebase_messaging: ^6.0.16
+  dio: ^3.0.9
 
 dev_dependencies:
   flutter_test:
