@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hii_hello/screens/loading.dart';
 import './screens/login_screen.dart';
 
 
@@ -13,7 +14,7 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.teal,
         accentColor: Colors.teal,
       ),
-      home: LoginScreen(),
+      home:  LoginScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

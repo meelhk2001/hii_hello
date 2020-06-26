@@ -88,20 +88,43 @@ class _HomeState extends State<Home> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             ClipRRect(
-                              child: CachedNetworkImage(
-                                placeholder: (context, url) => Container(
-                                  child: CircularProgressIndicator(
-                                      strokeWidth: 1.0,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.teal)),
+                              child: GestureDetector(
+                                                              child: CachedNetworkImage(
+                                  placeholder: (context, url) => Container(
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 1.0,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                            Colors.teal)),
+                                    width: 50.0,
+                                    height: 50.0,
+                                    padding: EdgeInsets.all(15.0),
+                                  ),
+                                  imageUrl: document['photoUrl'] ?? photoUrl,
                                   width: 50.0,
                                   height: 50.0,
-                                  padding: EdgeInsets.all(15.0),
+                                  fit: BoxFit.cover,
                                 ),
-                                imageUrl: document['photoUrl'] ?? photoUrl,
-                                width: 50.0,
-                                height: 50.0,
-                                fit: BoxFit.cover,
+                                onTap: (){
+                                  showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                        titlePadding: EdgeInsets.all(0),
+                      
+                        contentPadding: EdgeInsets.all(0),
+                     
+                       
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(100)),
+                        ),
+                        content: Container(
+                          width: MediaQuery.of(context).size.width * 0.5,
+                          child: Image.network(
+                            document['photoUrl'],
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      ));
+                                },////////////////////////////////////////////////////////////////////////////
                               ),
                               borderRadius:
                                   BorderRadius.all(Radius.circular(25.0)),
@@ -124,7 +147,7 @@ class _HomeState extends State<Home> {
                                   ),
                                   Container(
                                     child: Text(
-                                      '${document['aboutMe'] ?? 'I am a Hii Hello User'}',
+                                      '${document['aboutMe'] ?? 'Hey, I am Alphabics User'}',
                                       style: TextStyle(color: Colors.white),
                                     ),
                                     alignment: Alignment.centerLeft,
@@ -153,10 +176,8 @@ class _HomeState extends State<Home> {
                         // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
                       ),
                       onTap: () {
-                        unRead[index + 1] = false;
-                        setState(() {
-                          unRead[index + 1] = false;
-                        });
+                        
+                        
                         print(' chatting with ${document.documentID}');
                         Navigator.push(
                             context,

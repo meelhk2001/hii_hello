@@ -40,35 +40,41 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin{
     ////notification/////////notification////notification////notification////notification////notification////notification////notification
     
 
-
-    // _fcm.configure(
-    //   onMessage: (Map<String, dynamic> message) async {
-    //     print("onMessage: $message");
-    //     showDialog(
-    //       context: context,
-    //       builder: (context) => AlertDialog(
-    //         content: ListTile(
-    //           title: Text(message['notification']['title']),
-    //           subtitle: Text(message['notification']['body']),
-    //         ),
-    //         actions: <Widget>[
-    //           FlatButton(
-    //             child: Text('Ok'),
-    //             onPressed: () => Navigator.of(context).pop(),
-    //           ),
-    //         ],
-    //       ),
-    //     );
-    //   },
-    //   onLaunch: (Map<String, dynamic> message) async {
-    //     print("onLaunch: $message");
-    //     // TODO optional
-    //   },
-    //   onResume: (Map<String, dynamic> message) async {
-    //     print("onResume: $message");
-    //     // TODO optional
-    //   },
-    // );
+    _fcm.requestNotificationPermissions(
+      IosNotificationSettings(
+    sound: true,
+    badge: true,
+    alert: true
+  )
+    );
+    _fcm.configure(
+      onMessage: (Map<String, dynamic> message) async {
+        print("onMessage: $message");
+        // showDialog(
+        //   context: context,
+        //   builder: (context) => AlertDialog(
+        //     content: ListTile(
+        //       title: Text(message['notification']['title']),
+        //       subtitle: Text(message['notification']['body']),
+        //     ),
+        //     actions: <Widget>[
+        //       FlatButton(
+        //         child: Text('Ok'),
+        //         onPressed: () => Navigator.of(context).pop(),
+        //       ),
+        //     ],
+        //   ),
+        // );
+      },
+      onLaunch: (Map<String, dynamic> message) async {
+        print("onLaunch: $message");
+        // TODO optional
+      },
+      onResume: (Map<String, dynamic> message) async {
+        print("onResume: $message");
+        // TODO optional
+      },
+    );
 
 
 
@@ -378,6 +384,7 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin{
     HapticFeedback.lightImpact();
     // type: 0 = text, 1 = image, 2 = sticker
     if (content.trim() != '') {
+      
       // HapticFeedback.vibrate()
       textEditingController.clear();
       typedMessage = '';
@@ -398,7 +405,7 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin{
             'read': 1
           },
         );
-        try{Firestore.instance
+        try{await Firestore.instance
             .collection('users')
             .document('${widget.docId}')
             .collection('contacts')
@@ -409,9 +416,11 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin{
           'createdAt': null,
           'chattingWith': null,
           'contacts': null,
-        },);}
+        },);
+        sendNotification('New Message');
+        }
         catch(error){
-          Firestore.instance
+         await Firestore.instance
             .collection('users')
             .document('${widget.docId}')
             .collection('contacts')
@@ -424,6 +433,7 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin{
           'chattingWith': null,
           'contacts': null,
         }, merge: true);
+        sendNotification('New Message');
         }
       });
       
@@ -441,72 +451,84 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin{
 ///////////////
 ///Strating of notification code
 
-// Future<void> sendNotification(receiver,msg)async{
+Future<void> sendNotification(String title) async{
 
-//     var token = await getToken(receiver);
-//     print('token : $token');
+  String body ;
+  prefs = await SharedPreferences.getInstance();
+  var _phone = await prefs.getString('phoneNumber');
+  var result = await Firestore.instance.collection('users').document(widget.docId).collection('contacts').document(_phone).get();
+  body = result['nickname'];
 
-//     final data = {
-//       "notification": {"body": "Accept Ride Request", "title": "This is Ride Request"},
-//       "priority": "high",
-//       "data": {
-//         "click_action": "FLUTTER_NOTIFICATION_CLICK",
-//         "id": "1",
-//         "status": "done"
-//       },
-//       "to": "$token"
-//     };
-
-//     final headers = {
-//       'content-type': 'application/json',
-//       'Authorization': 'key=AAAAY2mZqb4:APA91bH38d3b4mgc4YpVJ0eBgDez1jxEzCNTq1Re6sJQNZ2OJvyvlZJYx7ZASIrAj1DnSfVJL-29qsyPX6u8MyakmzlY-MRZeXOodkIdYoWgwvPVhNhJmfrTC6ZC2wG7lcmgXElA6E09'
-//     };
+    var token =    await getToken(widget.docId);
+    print('token : $token');
 
 
-//     BaseOptions options = new BaseOptions(
-//       connectTimeout: 5000,
-//       receiveTimeout: 3000,
-//       headers: headers,
-//     );
+    
+
+    final data = {
+      "notification": {"body": 'From : $body', "title": title},
+      "priority": "high",
+      "data": {
+        "click_action": "FLUTTER_NOTIFICATION_CLICK",
+        "id": "1",
+        "status": "done",
+        'sound': 'default'
+      },
+      "to": "$token"
+    };
+
+    final headers = {
+      'content-type': 'application/json',
+      'Authorization': 'key=AAAAXbEZttU:APA91bGoF3JppZ75pswhJETzJqHKiwRXOVg-3HWAS-BhqUsDoUeDYZU3My18Jbs9Uo-Xab9AeT4I8hwhLBBw3BxgibyLQLTMPOE3tjQRotISLhYkbU3NNQ7nzI7xGZfASzvza8I_DZUo'
+    };
 
 
-//     try {
-//       final response = await Dio(options).post(postUrl,
-//           data: data);
+    BaseOptions options = new BaseOptions(
+      connectTimeout: 5000,
+      receiveTimeout: 3000,
+      headers: headers,
 
-//       if (response.statusCode == 200) {
-//         Fluttertoast.showToast(msg: 'Request Sent To Driver');
-//       } else {
-//         print('notification sending failed');
-//         // on failure do sth
-//       }
-//     }
-//     catch(e){
-//       print('exception $e');
-//     }
-
-//   }
+    );
 
 
+    try {
+      final postUrl = 'https://fcm.googleapis.com/fcm/send';
+      final response = await Dio(options).post(postUrl,
+          data: data);
 
-  // Future<String> getToken(userId)async{
+      // if (response.statusCode == 200) {
+      //   Fluttertoast.showToast(msg: 'Request Sent To Driver');
+      // } else {
+      //   print('notification sending failed');
+      //   // on failure do sth
+      // }
+    }
+    catch(e){
+      print('exception $e');
+    }
 
-  //   final Firestore _db = Firestore.instance;
-
-  //   var token;
-  //   //String fcmToken = await _fcm.getToken();
-  //   await _db.collection('users')
-  //       .document(userId)
-  //       .collection('tokens').getDocuments().then((snapshot){
-  //         snapshot.documents.forEach((doc){
-  //           token = doc.documentID;
-  //         });
-  //   });
-
-  //   return token;
+  }
 
 
-  // }
+
+  Future<String> getToken(userId)async{
+
+    final Firestore _db = Firestore.instance;
+
+    print('ye h docId  =============          ${widget.docId}');
+
+    var token ;
+    //String fcmToken = await _fcm.getToken();
+   var result =  await Firestore.instance
+                      .collection('users')
+                      .where('id', isEqualTo: widget.docId)
+                      .getDocuments();
+                      token = result.documents[0]['token'];
+    print('ye h token  =============          $token');
+    return token;
+
+
+  }
 
 //////////////////
 ///Ending of Notification code

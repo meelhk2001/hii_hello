@@ -6,6 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'loading.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -14,6 +15,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();///////////////////////notificatio
 
   String phoneNumber;
 
@@ -35,8 +37,11 @@ class _LoginScreenState extends State<LoginScreen> {
     // setState(() {
     //         isLoading = false;
     //       });
+    //firebaseCloudMessaging_Listeners();
     super.initState();
   }
+
+  
 
   Future<void> getCurrentUser() async {
     try {
@@ -66,7 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         isLoading = false;
       });
-      print('Error =====================  $error');
+      
     }
   }
 
@@ -75,7 +80,7 @@ class _LoginScreenState extends State<LoginScreen> {
         (await auth.signInWithCredential(credential)).user;
 
     if (firebaseUser != null) {
-      print('yaha bhi aaya h if me....................................');
+      
       // Check is already sign up
       final QuerySnapshot result = await Firestore.instance
           .collection('users')
@@ -84,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final List<DocumentSnapshot> documents = result.documents;
       if (documents.length == 0) {
         // Update data to server if new user
-        
+       var token = await _firebaseMessaging.getToken();////////////////////////////////Notifications
         await Firestore.instance
             .collection('users')
             .document(firebaseUser.uid)
@@ -95,7 +100,8 @@ class _LoginScreenState extends State<LoginScreen> {
           'createdAt': DateTime.now().millisecondsSinceEpoch.toString(),
           'chattingWith': null,
           'contacts': null,
-          'aboutMe': 'I am a Hii Hello user'
+          'aboutMe': 'Hey, I am Alphabics user',
+          'token': token
         });
         // Write data to local
         currentUser = firebaseUser;
@@ -108,6 +114,10 @@ class _LoginScreenState extends State<LoginScreen> {
         await prefs.setString('phoneNumber', phoneNumber);
       } else {
         // Write data to local
+        var token = await _firebaseMessaging.getToken();
+        await Firestore.instance
+            .collection('users')
+            .document(firebaseUser.uid).updateData({'token': token});
         prefs = await SharedPreferences.getInstance();
         await prefs.clear();
         await prefs.setString('phonenumber', phoneNumber);
@@ -137,7 +147,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> sendOtp(String phoneNumber, BuildContext context) async {
+  
     await _auth.verifyPhoneNumber(
+      
         phoneNumber: phoneNumber,
         timeout: Duration(seconds: 60),
         verificationCompleted: (AuthCredential authCredential) {
@@ -170,7 +182,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           onPressed: () async {
                             FirebaseAuth auth = FirebaseAuth.instance;
 
-                            credential = PhoneAuthProvider.getCredential(
+                            credential =  PhoneAuthProvider.getCredential(
+
                                 verificationId: verificationId, smsCode: otp);
                             otpVerify(credential, auth);
                           })
@@ -195,7 +208,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.teal,
                   child: Center(
                     child: Text(
-                      'Hii Hello',
+                      'Alphabics',
                       style: TextStyle(fontSize: 40, color: Colors.white),
                     ),
                   ),

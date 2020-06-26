@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'login_screen.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'contact_us.dart';
 
 class EditYourself extends StatefulWidget {
   final String uid;
@@ -34,7 +35,7 @@ class _EditYourselfState extends State<EditYourself> {
   Future<void> readLocal() async {
     realPhotoUrl = photoUrl;
     prefs = await SharedPreferences.getInstance();
-    aboutMe.text = prefs.getString('aboutMe') ?? 'I am a Hii Hello User';
+    aboutMe.text = prefs.getString('aboutMe') ?? 'Hey, I am Alphabics User';
     //realPhotoUrl = prefs.getString('photoUrl') ?? photoUrl;
     setState(() {
       realPhotoUrl = prefs.getString('photoUrl') ?? photoUrl;
@@ -188,6 +189,7 @@ class _EditYourselfState extends State<EditYourself> {
                 height: 40,
               ),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   FlatButton.icon(
                       color: Colors.teal,
@@ -208,6 +210,26 @@ class _EditYourselfState extends State<EditYourself> {
                               builder: (context) => LoginScreen(),
                             ));
                       }),
+                      FlatButton.icon(
+                      color: Colors.teal,
+                      label: Text(
+                        'Contact Us',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      icon: Icon(
+                        Icons.info,
+                        color: Colors.white,
+                      ),
+                      onPressed: () {
+                      
+                  
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ContactUs(),
+                            ));
+                      }),
+
                 ],
               )
             ],
