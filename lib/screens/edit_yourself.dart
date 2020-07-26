@@ -22,6 +22,7 @@ class _EditYourselfState extends State<EditYourself> {
   final _auth = FirebaseAuth.instance;
   bool isLoading = false;
   File avatarImageFile;
+  String phoneNumber;
   String photoUrl =
       'https://4.bp.blogspot.com/-txKoWDBmvzY/XHAcBmIiZxI/AAAAAAAAC5o/wOkD9xoHn28Dl0EEslKhuI-OzP8_xvTUwCLcBGAs/s1600/2.jpg';
   String realPhotoUrl;
@@ -36,6 +37,7 @@ class _EditYourselfState extends State<EditYourself> {
     realPhotoUrl = photoUrl;
     prefs = await SharedPreferences.getInstance();
     aboutMe.text = prefs.getString('aboutMe') ?? 'Hey, I am Alphabics User';
+    phoneNumber = prefs.getString('phoneNumber') ?? 'Number not available';
     //realPhotoUrl = prefs.getString('photoUrl') ?? photoUrl;
     setState(() {
       realPhotoUrl = prefs.getString('photoUrl') ?? photoUrl;
@@ -146,7 +148,7 @@ class _EditYourselfState extends State<EditYourself> {
                       child: Align(
                         alignment: Alignment.bottomRight,
                         child: Container(
-                            color: Colors.black12,
+                            color: Colors.black54,
                             child: FlatButton.icon(
                               label: Text(''),
                               icon: Icon(
@@ -168,6 +170,8 @@ class _EditYourselfState extends State<EditYourself> {
                 style: TextStyle(
                     fontSize: 30, color: Colors.teal, letterSpacing: 1.0),
               ),
+              //SizedBox(height: 40),
+              
               SizedBox(
                 height: 10,
               ),
@@ -184,6 +188,12 @@ class _EditYourselfState extends State<EditYourself> {
                   hintStyle: TextStyle(color: Colors.teal),
                 ),
                 controller: aboutMe,
+              ),
+              Text(
+                phoneNumber,
+                
+                style: TextStyle(
+                    fontSize: 20, color: Colors.teal, letterSpacing: 1.0),
               ),
               SizedBox(
                 height: 40,

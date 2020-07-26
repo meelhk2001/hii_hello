@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
+import 'package:hii_hello/screens/user_details.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'chat_screen.dart';
 import 'contact_screen.dart';
@@ -31,7 +32,6 @@ class _HomeState extends State<Home> {
 
   Widget buildItem(
       BuildContext context, DocumentSnapshot contactDocument, int index) {
-
     if (contactDocument['id'] == widget.user.uid) {
       return Container();
     } else {
@@ -41,8 +41,6 @@ class _HomeState extends State<Home> {
               .document(contactDocument['id'])
               .snapshots(), //('id', isEqualTo:contactDocument['id'] ).snapshots(),
           builder: (context, snapshot) {
-            
-
             // Firestore.instance
             //     .collection('messages')
             //     .document(groupChatId)
@@ -59,14 +57,14 @@ class _HomeState extends State<Home> {
             // print('document ============== $document');
             if (snapshot.hasData) {
               AsyncSnapshot<dynamic> snapshots =
-                snapshot as AsyncSnapshot<dynamic>;
-            var document = snapshots.data;
+                  snapshot as AsyncSnapshot<dynamic>;
+              var document = snapshots.data;
 
-            if (widget.user.uid.hashCode <= document.documentID.hashCode) {
-              groupChatId = '${widget.user.uid}-${document.documentID}';
-            } else {
-              groupChatId = '${document.documentID}-${widget.user.uid}';
-            }
+              if (widget.user.uid.hashCode <= document.documentID.hashCode) {
+                groupChatId = '${widget.user.uid}-${document.documentID}';
+              } else {
+                groupChatId = '${document.documentID}-${widget.user.uid}';
+              }
               return StreamBuilder(
                   stream: Firestore.instance
                       .collection('messages')
@@ -76,122 +74,139 @@ class _HomeState extends State<Home> {
                       .where('idFrom', isEqualTo: '${document.documentID}')
                       .snapshots(),
                   builder: (context, readSnapshot) {
-                    if(readSnapshot.hasData){
-                    return GestureDetector(
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: readSnapshot.data.documents.length != 0
-                                ? Colors.cyan[800]
-                                : Colors.teal,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            ClipRRect(
-                              child: GestureDetector(
-                                                              child: CachedNetworkImage(
-                                  placeholder: (context, url) => Container(
-                                    child: CircularProgressIndicator(
-                                        strokeWidth: 1.0,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                            Colors.teal)),
+                    if (readSnapshot.hasData) {
+                      return GestureDetector(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: readSnapshot.data.documents.length != 0
+                                  ? Colors.cyan[800]
+                                  : Colors.teal,
+                              borderRadius: BorderRadius.circular(20)),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              ClipRRect(
+                                child: GestureDetector(
+                                  child: CachedNetworkImage(
+                                    placeholder: (context, url) => Container(
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 1.0,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                  Colors.teal)),
+                                      width: 50.0,
+                                      height: 50.0,
+                                      padding: EdgeInsets.all(15.0),
+                                    ),
+                                    imageUrl: document['photoUrl'] ?? photoUrl,
                                     width: 50.0,
                                     height: 50.0,
-                                    padding: EdgeInsets.all(15.0),
+                                    fit: BoxFit.cover,
                                   ),
-                                  imageUrl: document['photoUrl'] ?? photoUrl,
-                                  width: 50.0,
-                                  height: 50.0,
-                                  fit: BoxFit.cover,
+                                  onTap: () {
+                                    showDialog(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                              titlePadding: EdgeInsets.all(0),
+                                              contentPadding: EdgeInsets.all(0),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.all(
+                                                    Radius.circular(100)),
+                                              ),
+                                              content: Container(
+                                                width: MediaQuery.of(context)
+                                                        .size
+                                                        .width *
+                                                    0.5,
+                                                child: GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              UserDetails(
+                                                            userId: document
+                                                                .documentID,
+                                                            userName:
+                                                                contactDocument[
+                                                                    'nickname'],
+                                                          ),
+                                                        ));
+                                                  },
+                                                  child: Image.network(
+                                                    document['photoUrl'],
+                                                    fit: BoxFit.fill,
+                                                  ),
+                                                ),
+                                              ),
+                                            ));
+                                  }, ////////////////////////////////////////////////////////////////////////////
                                 ),
-                                onTap: (){
-                                  showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                        titlePadding: EdgeInsets.all(0),
-                      
-                        contentPadding: EdgeInsets.all(0),
-                     
-                       
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(100)),
-                        ),
-                        content: Container(
-                          width: MediaQuery.of(context).size.width * 0.5,
-                          child: Image.network(
-                            document['photoUrl'],
-                            fit: BoxFit.fill,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(25.0)),
+                                clipBehavior: Clip.hardEdge,
+                              ),
+                              Container(
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Container(
+                                      child: Text(
+                                        ' ${contactDocument['nickname'] ?? widget.phoneNumber}',
+                                        style: TextStyle(
+                                            color: Colors.white, fontSize: 20),
+                                      ),
+                                      alignment: Alignment.centerLeft,
+                                      margin: EdgeInsets.fromLTRB(
+                                          10.0, 0.0, 0.0, 5.0),
+                                    ),
+                                    Container(
+                                      child: Text(
+                                        '${document['aboutMe'] ?? 'Hey, I am Alphabics User'}',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      alignment: Alignment.centerLeft,
+                                      margin: EdgeInsets.fromLTRB(
+                                          10.0, 0.0, 0.0, 0.0),
+                                    )
+                                  ],
+                                ),
+                                margin: EdgeInsets.only(left: 20.0),
+                              ),
+                              SizedBox(
+                                width: 10,
+                                child: readSnapshot.data.documents.length == 0
+                                    ? Container()
+                                    : Text(
+                                        '${readSnapshot.data.documents.length}',
+                                        style: TextStyle(
+                                            color: Colors.red, fontSize: 25),
+                                      ),
+                              )
+                            ],
                           ),
-                        ),
-                      ));
-                                },////////////////////////////////////////////////////////////////////////////
-                              ),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(25.0)),
-                              clipBehavior: Clip.hardEdge,
-                            ),
-                            Container(
-                              child: Column(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Container(
-                                    child: Text(
-                                      ' ${contactDocument['nickname'] ?? widget.phoneNumber}',
-                                      style: TextStyle(
-                                          color: Colors.white, fontSize: 20),
-                                    ),
-                                    alignment: Alignment.centerLeft,
-                                    margin: EdgeInsets.fromLTRB(
-                                        10.0, 0.0, 0.0, 5.0),
-                                  ),
-                                  Container(
-                                    child: Text(
-                                      '${document['aboutMe'] ?? 'Hey, I am Alphabics User'}',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    alignment: Alignment.centerLeft,
-                                    margin: EdgeInsets.fromLTRB(
-                                        10.0, 0.0, 0.0, 0.0),
-                                  )
-                                ],
-                              ),
-                              margin: EdgeInsets.only(left: 20.0),
-                            ),
-                            SizedBox(
-                              width: 10,
-                              child: readSnapshot.data.documents.length == 0
-                                  ? Container()
-                                  : Text(
-                                      '${readSnapshot.data.documents.length}',
-                                      style: TextStyle(color: Colors.red, fontSize: 25),
-                                    ),
-                            )
-                          ],
-                        ),
-                        margin: EdgeInsets.only(
-                            bottom: 10.0, left: 5.0, right: 5.0),
+                          margin: EdgeInsets.only(
+                              bottom: 10.0, left: 5.0, right: 5.0),
 
-                        padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
-                        // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                      ),
-                      onTap: () {
-                        
-                        
-                        print(' chatting with ${document.documentID}');
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => Chat(
-                                    document.documentID,
-                                    document['photoUrl'] ?? photoUrl,
-                                    contactDocument['nickname'],
-                                    widget.phoneNumber)));
-                      },
-                    );
-                  }else{
-                    return Container();
-                  }/////////////////////////////////////////////////////////////llll/////////////
+                          padding: EdgeInsets.fromLTRB(25.0, 10.0, 25.0, 10.0),
+                          // shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+                        ),
+                        onTap: () {
+                          print(' chatting with ${document.documentID}');
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => Chat(
+                                      document.documentID,
+                                      document['photoUrl'] ?? photoUrl,
+                                      contactDocument['nickname'],
+                                      widget.phoneNumber)));
+                        },
+                      );
+                    } else {
+                      return Container();
+                    } /////////////////////////////////////////////////////////////llll/////////////
                   });
             } else {
               return Container(
@@ -272,7 +287,7 @@ class _HomeState extends State<Home> {
             },
           ),
           centerTitle: true,
-          title: Text('Home Screen'),
+          title: Text('Alphabics'),
           actions: <Widget>[
             IconButton(
                 icon: Icon(

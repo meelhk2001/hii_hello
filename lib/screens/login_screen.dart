@@ -15,7 +15,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  FirebaseMessaging _firebaseMessaging = FirebaseMessaging();///////////////////////notificatio
+  FirebaseMessaging _firebaseMessaging =
+      FirebaseMessaging(); ///////////////////////notificatio
 
   String phoneNumber;
 
@@ -31,6 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
       'https://4.bp.blogspot.com/-txKoWDBmvzY/XHAcBmIiZxI/AAAAAAAAC5o/wOkD9xoHn28Dl0EEslKhuI-OzP8_xvTUwCLcBGAs/s1600/2.jpg';
 
   var isLoading = false;
+
+  var _isLoading = false;
+
   @override
   void initState() {
     getCurrentUser();
@@ -40,8 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
     //firebaseCloudMessaging_Listeners();
     super.initState();
   }
-
-  
 
   Future<void> getCurrentUser() async {
     try {
@@ -71,7 +73,6 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         isLoading = false;
       });
-      
     }
   }
 
@@ -80,7 +81,6 @@ class _LoginScreenState extends State<LoginScreen> {
         (await auth.signInWithCredential(credential)).user;
 
     if (firebaseUser != null) {
-      
       // Check is already sign up
       final QuerySnapshot result = await Firestore.instance
           .collection('users')
@@ -89,7 +89,8 @@ class _LoginScreenState extends State<LoginScreen> {
       final List<DocumentSnapshot> documents = result.documents;
       if (documents.length == 0) {
         // Update data to server if new user
-       var token = await _firebaseMessaging.getToken();////////////////////////////////Notifications
+        var token = await _firebaseMessaging
+            .getToken(); ////////////////////////////////Notifications
         await Firestore.instance
             .collection('users')
             .document(firebaseUser.uid)
@@ -117,7 +118,8 @@ class _LoginScreenState extends State<LoginScreen> {
         var token = await _firebaseMessaging.getToken();
         await Firestore.instance
             .collection('users')
-            .document(firebaseUser.uid).updateData({'token': token});
+            .document(firebaseUser.uid)
+            .updateData({'token': token});
         prefs = await SharedPreferences.getInstance();
         await prefs.clear();
         await prefs.setString('phonenumber', phoneNumber);
@@ -129,6 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       Fluttertoast.showToast(msg: "Sign in success");
       setState(() {
+        _isLoading = false;
         isLoading = false;
       });
 
@@ -142,14 +145,14 @@ class _LoginScreenState extends State<LoginScreen> {
       Fluttertoast.showToast(msg: "Sign in fail");
       setState(() {
         isLoading = false;
+        _isLoading = false;
       });
     }
   }
 
   Future<void> sendOtp(String phoneNumber, BuildContext context) async {
-  
-    await _auth.verifyPhoneNumber(
-      
+    try{
+      await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         timeout: Duration(seconds: 60),
         verificationCompleted: (AuthCredential authCredential) {
@@ -158,6 +161,9 @@ class _LoginScreenState extends State<LoginScreen> {
         verificationFailed: null,
         codeSent: (String verificationId, [int forceResendingToken]) {
           //show dialog to take input from the user
+          setState(() {
+            _isLoading = false;
+          });
           showDialog(
               context: context,
               barrierDismissible: false,
@@ -175,22 +181,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     actions: <Widget>[
-                      FlatButton(
-                          child: Text("Done"),
-                          textColor: Colors.white,
-                          color: Colors.teal,
-                          onPressed: () async {
-                            FirebaseAuth auth = FirebaseAuth.instance;
+                      _isLoading
+                          ? CircularProgressIndicator()
+                          : FlatButton(
+                              child: Text("Done"),
+                              textColor: Colors.white,
+                              color: Colors.teal,
+                              onPressed: () async {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+                                FirebaseAuth auth = FirebaseAuth.instance;
 
-                            credential =  PhoneAuthProvider.getCredential(
-
-                                verificationId: verificationId, smsCode: otp);
-                            otpVerify(credential, auth);
-                          })
+                                credential = PhoneAuthProvider.getCredential(
+                                    verificationId: verificationId,
+                                    smsCode: otp);
+                                otpVerify(credential, auth);
+                              })
                     ],
                   ));
         },
         codeAutoRetrievalTimeout: null);
+    }catch(error){
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -233,19 +249,24 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 SizedBox(height: 30),
-                FlatButton(
-                  color: Colors.teal,
-                  child: Text(
-                    'Request OTP',
-                    style: TextStyle(fontSize: 15, color: Colors.white),
-                  ),
-                  onPressed: () {
-                    String phone = '+91$phoneNumber';
+                _isLoading
+                    ? CircularProgressIndicator()
+                    : FlatButton(
+                        color: Colors.teal,
+                        child: Text(
+                          'Request OTP',
+                          style: TextStyle(fontSize: 15, color: Colors.white),
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _isLoading = true;
+                          });
+                          String phone = '+91$phoneNumber';
 
-                    print(phone);
-                    sendOtp(phone, context);
-                  },
-                )
+                          print(phone);
+                          sendOtp(phone, context);
+                        },
+                      )
               ],
             ),
           ));
