@@ -401,8 +401,8 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
                         onTap: hyperlink
                             ? () async {
                                 String text = document['content']
-                                    .toString()
-                                    .toLowerCase();
+                                    .toString();
+                                    
                                 //document['content'].toString().toLowerCase();
                                 text = text.replaceAll('https://', '');
                                 text = text.replaceAll('http://', "");
@@ -560,7 +560,7 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
                   onTap: hyperlink
                       ? () async {
                           String text =
-                              document['content'].toString().toLowerCase();
+                              document['content'].toString();
                           //document['content'].toString().toLowerCase();
                           text = text.replaceAll('https://', '');
                           text = text.replaceAll('http://', "");
