@@ -97,7 +97,13 @@ class _ChatState extends State<Chat> with SingleTickerProviderStateMixin {
     '.world',
     '.vg',
     '.wiki',
-    '.one'
+    '.one',
+    '.be',
+    '.ly',
+    '.gle',
+    '.ac',
+    '.app',
+    '.gl',
   ];
   //notification
   final Firestore _db = Firestore.instance;
